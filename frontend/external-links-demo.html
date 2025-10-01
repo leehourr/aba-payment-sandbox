@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayWay Payment - External Links Fixed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .checkout-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .checkout-methods {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .checkout-methods button {
+            flex: 1;
+            font-size: 14px;
+            padding: 8px 12px;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>PayWay Integration - External Links Fixed</h1>
+    
+    <form id="payment-form">
+        <div class="form-group">
+            <label for="amount">Amount (USD):</label>
+            <input type="number" id="amount" name="amount" step="0.01" min="0.01" value="10.00" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="payment_option">Payment Option:</label>
+            <select id="payment_option" name="payment_option" required>
+                <option value="">Select payment method</option>
+                <option value="credit_card">Credit Card</option>
+                <option value="debit_card">Debit Card</option>
+            </select>
+        </div>
+        
+        <button type="submit">Process Payment</button>
+    </form>
+
+    <div id="checkout-container" class="checkout-container" style="display: none;">
+        <h3>PayWay Checkout Ready</h3>
+        <p>External links have been fixed to load properly from PayWay's servers.</p>
+        
+        <div class="checkout-methods">
+            <button onclick="showInIframe()">Show in iframe</button>
+            <button onclick="openInNewWindow()">Open in New Window</button>
+            <button onclick="openInNewTab()">Open in New Tab</button>
+        </div>
+        
+        <div id="iframe-container" style="display: none;">
+            <iframe id="checkout-iframe" src="about:blank"></iframe>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <script>
+        let checkoutHtml = '';
+
+        document.getElementById('payment-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const paymentData = {
+                amount: parseFloat(formData.get('amount')),
+                payment_option: formData.get('payment_option'),
+                description: 'Test payment'
+            };
+            
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Processing...';
+            
+            try {
+                const response = await axios.post('http://127.0.0.1:8000/api/pay', paymentData);
+                const result = response.data;
+                
+                if (result.success && result.payment_type === 'redirect') {
+                    // Store the fixed HTML
+                    checkoutHtml = result.checkout_html;
+                    
+                    // Show checkout options
+                    document.getElementById('checkout-container').style.display = 'block';
+                    
+                    alert(`Payment initiated! Transaction ID: ${result.transaction_id}`);
+                } else {
+                    alert('Payment processed: ' + JSON.stringify(result));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + (error.response?.data?.message || error.message));
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Process Payment';
+            }
+        });
+
+        function showInIframe() {
+            // For best results, use new window instead of iframe to avoid CORS
+            alert('Note: Opening in new window for best compatibility (avoids CORS issues)');
+            openInNewWindow();
+        }
+
+        function openInNewWindow() {
+            const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+            newWindow.document.write(checkoutHtml);
+            newWindow.document.close();
+        }
+
+        function openInNewTab() {
+            const newTab = window.open('');
+            newTab.document.write(checkoutHtml);
+            newTab.document.close();
+        }
+    </script>
+</body>
+</html>
