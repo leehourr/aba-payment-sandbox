@@ -50,6 +50,4 @@ Demo pages available at:
 - `/frontend/test-api.html` - API testing interface
 - `/frontend/external-links-demo.html` - Integration examples
 
-## License
 
-MIT License
